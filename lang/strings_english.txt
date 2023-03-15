@@ -1,0 +1,35 @@
+<?php
+/**
+ * Defcon plugin for MantisBT
+ * https://github.com/mantisbt-plugins/Defcon
+ *
+ * Copyright (c) 2022  Cas Nuy
+ *
+ * This file is part of the CustomReporter plugin for MantisBT.
+ *
+ * CustomReporter is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+$s_plugin_Defcon_title       = 'Default Project Consultant';
+$s_plugin_Defcon_description = 'Allows defining a default consultant per project';
+$s_plugin_Defcon_config      = 'Configuration';
+$s_plugin_Defcon_threshold   = 'Threshold to change Default Project Consultant by Issue';
+$s_plugin_Defcon_status      = 'Status to ignore in My View page';
+$s_plugin_Defcon_backup      = 'Backup user in case no Default Consultant has been defined';
+$s_plugin_Defcon_my_issues   = 'My issues as Consultant';
+$s_plugin_Defcon_consultant  = 'Consultant';
+$s_plugin_Defcon_mail		 = 'General Email';
+$s_plugin_Defcon_role		 = 'Role of the consultant';
+$s_plugin_Defcon_role_mon	 = 'Monitor';
+$s_plugin_Defcon_role_man	 = 'Manager';
