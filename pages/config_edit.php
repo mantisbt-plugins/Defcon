@@ -31,11 +31,14 @@ $f_update_threshold = gpc_get_int( 'plugin_defcon_threshold', DEVELOPER );
 $f_myview_status = gpc_get_int( 'plugin_defcon_status', 90 );
 $f_backup_consultant = gpc_get_int( 'plugin_defcon_backup', 1 );
 $f_role = gpc_get_int( 'plugin_defcon_role', 1 );
+$f_historic = gpc_get_int( 'plugin_defcon_historic', 1 );
 # update results
 plugin_config_set( 'update_threshold', $f_update_threshold );
 plugin_config_set( 'myview_status', $f_myview_status );
 plugin_config_set( 'backup_consultant', $f_backup_consultant );
 plugin_config_set( 'role', $f_role );
+plugin_config_set( 'historic', $f_historic );
+
 form_security_purge( 'plugin_defcon_config_update' );
 
 # redirect

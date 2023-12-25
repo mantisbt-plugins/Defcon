@@ -27,7 +27,7 @@ class Defconplugin extends MantisPlugin {
 		$this->name = plugin_lang_get( 'title' );
 		$this->description = plugin_lang_get( 'description' );
 		$this->page = 'config';
-		$this->version = '2.1.1';
+		$this->version = '3.1.0';
 		$this->requires = array( 'MantisCore' => '2.0.0', );
 		$this->author = 'Cas Nuy';
 		$this->contact = 'cas@nuy.info';
@@ -40,9 +40,9 @@ class Defconplugin extends MantisPlugin {
 			'myview_status' => 90,
 			'backup_consultant' => 1,
 			'role' => 1,
+			'historic'=> 1,
 			);
 	}
-
 
 	function init() {
 		// we need an event in the my_view_page
@@ -81,7 +81,6 @@ class Defconplugin extends MantisPlugin {
 		//Show where the user is defined as primary consultant in the my_view page
 		plugin_event_hook( 'EVENT_MYVIEW', 'defcon_myview' );
 	}
-
 
 	function defcon_field_filter($p_event){
 		require_once( 'classes/DefconConsultantFilter.Class.php' );
@@ -123,27 +122,38 @@ function defcon_create_project( $p_event, $t_project_id ) {
 				<input type="text" name="mail" size="100" maxlength="100" autocomplete='none'>
 			</td>
 		</tr>		
+		<tr>
+			<th class="category">
+				<label for="mail">
+					<?php echo plugin_lang_get( 'rate','Defcon' ) ?>
+				</label>
+			</th>
+			<td>
+				<input type="number" name="rate" autocomplete='none'>
+			</td>
+		</tr>		
 <?php
 	}
 
 function defcon_create_project2( $p_event, $t_project_id ) {
 		$t_consultant_id	= intval(gpc_get_string( 'con_id'));
 		$t_mail			  	= gpc_get_string( 'mail' );
+		$t_rate				= gpc_get_int( 'rate' );
 
 		// first update the plugin table
 		$query = "select * from {plugin_Defcon_project} WHERE project_id= $t_project_id";
 		$result = db_query($query);
 		$count= db_num_rows($result);
 		if ($count>0){
-			$query = "update {plugin_Defcon_project} SET consultant_id=$t_consultant_id, generalmail = '$t_mail' WHERE project_id= $t_project_id";
+			$query = "update {plugin_Defcon_project} SET consultant_id=$t_consultant_id, generalmail = '$t_mail', rate = $t_rate WHERE project_id= $t_project_id";
 			$result = db_query($query);
 		} else{
-            $query = "INSERT INTO {plugin_Defcon_project} (project_id,consultant_id,generalmail) values ($t_project_id, $t_consultant_id, '$t_mail')";
+            $query = "INSERT INTO {plugin_Defcon_project} (project_id,consultant_id,generalmail, rate) values ($t_project_id, $t_consultant_id, '$t_mail', $t_rate)";
 			$result = db_query($query);
 		}
 		// next update the mantis_project_user_list_table in case role is set to be Manager
 		// Then consultant needs to be assigned Manager rights for this project ( ex-consultant will keep the existing Manager level)
-		// In case roile is set to be Monitor, all is handled @ issue level
+		// In case role is set to be Monitor, all is handled @ issue level
 		$f_role = plugin_config_get( 'backup_consultant' );
 		if ($f_role == 0){
 			$query = "select * from {project_user_list} WHERE user_id= $t_consultant_id and project_id=$t_project_id";
@@ -160,16 +170,18 @@ function defcon_create_project2( $p_event, $t_project_id ) {
 	}
 
 function defcon_update_project( $p_event, $t_project_id ) {
-			$query = "select consultant_id,generalmail from {plugin_Defcon_project} WHERE project_id= $t_project_id";
+			$query = "select consultant_id,generalmail, rate from {plugin_Defcon_project} WHERE project_id= $t_project_id";
 			$result = db_query($query);
 			if ($result){
 				$row = db_fetch_array($result);
 				if($row){
 					$t_consultant_id = $row['consultant_id'];
 					$t_mail = $row['generalmail'];
+					$t_rate = $row['rate'];
 				} else {
 					$t_consultant_id = plugin_config_get( 'backup_consultant' ) ;
 					$t_mail = "";
+					$t_rate = 0;
 				}
 			}
 
@@ -202,6 +214,16 @@ function defcon_update_project( $p_event, $t_project_id ) {
 				<input type="text" name="mail" size="100" maxlength="100" value="<?php echo $t_mail ?>" autocomplete='none'>
 			</td>
 		</tr>
+			<tr>
+			<th class="category">
+				<label for="mail">
+					<?php echo plugin_lang_get( 'rate','Defcon' ) ?>
+				</label>
+			</th>
+			<td>
+				<input type="number" name="rate" value = "<?php echo $t_rate ?>" autocomplete='none'>
+			</td>
+		</tr>		
 		
 <?php
 		echo '<tr class="spacer"><td colspan="6"></td></tr>';
@@ -210,17 +232,18 @@ function defcon_update_project( $p_event, $t_project_id ) {
 
 function defcon_update_project2( $p_event, $t_project_id ) {
 		$t_consultant_id = intval(gpc_get_string( 'con_id'));
-		$t_mail			  	= gpc_get_string( 'mail' );
+		$t_mail			 = gpc_get_string( 'mail' );
+		$t_rate			 = gpc_get_int( 'rate' );
 	
 		// first update the plugin table
 		$query = "select * from {plugin_Defcon_project} WHERE project_id= $t_project_id ";
 		$result = db_query($query);
 		$count= db_num_rows($result);
 		if ($count>0){
-			$query = "update {plugin_Defcon_project} SET consultant_id=$t_consultant_id, generalmail='$t_mail' WHERE project_id= $t_project_id";
+			$query = "update {plugin_Defcon_project} SET consultant_id=$t_consultant_id, generalmail='$t_mail', rate = $t_rate WHERE project_id= $t_project_id";
 			$result = db_query($query);
 		} else{
-            $query = "INSERT INTO {plugin_Defcon_project} (project_id,consultant_id, generalmail) values ($t_project_id, $t_consultant_id, '$t_mail')";
+            $query = "INSERT INTO {plugin_Defcon_project} (project_id,consultant_id, generalmail, rate) values ($t_project_id, $t_consultant_id, '$t_mail', $t_rate)";
 			$result = db_query($query);
 		}
 		// next update the mantis_project_user_list_table in case role is set to be Manager
@@ -312,29 +335,37 @@ function defcon_update_project2( $p_event, $t_project_id ) {
 		$t_project_id= $thisissue->project_id;
 		$t_bug_id= $thisissue->id;
 		if (substr($_SERVER['HTTP_REFERER'],-19) <> 'bug_report_page.php'){
-			$query = "select consultant_id from {plugin_Defcon_project} WHERE project_id= $t_project_id";
+			$query = "select consultant_id,rate from {plugin_Defcon_project} WHERE project_id= $t_project_id";
 			$result = db_query($query);
 			if ($result){
 				$row = db_fetch_array($result);
 				if($row){
 					$t_consultant_id = $row['consultant_id'];
+					$t_rate			 = $row['rate'];
 				} else {
 					$t_consultant_id = plugin_config_get( 'backup_consultant' ) ;
+					$t_rate			 = 0;
 				}
 			}		
 		} else {
 			$t_consultant_id = intval(gpc_get_string( 'con_id'));
 		}
 
+		// calculate the expected cost
+		if ( custom_field_is_linked( custom_field_get_id_from_name('Estimate'), $t_project_id ) ) {
+			$t_estimate= custom_field_get_value( custom_field_get_id_from_name('Estimate'), $t_bug_id ) * $t_rate;
+		} else {
+			$t_estimate = 0;
+		}
 		// first update the plugin table
 		$query = "select * from {plugin_Defcon_issue} WHERE issue_id= $t_bug_id";
 		$result = db_query($query);
 		$count= db_num_rows($result);
 		if ($count>0){
-			$query = "update {plugin_Defcon_issue} SET consultant_id=$consultant_id WHERE issue_id= $t_bug_id";
+			$query = "update {plugin_Defcon_issue} SET consultant_id=$consultant_id, rate = $t_rate, estimate = $t_estimate WHERE issue_id= $t_bug_id";
 			$result = db_query($query);
 		} else{
-            $query = "INSERT INTO {plugin_Defcon_issue} (issue_id,consultant_id) values ($t_bug_id, $t_consultant_id)";
+            $query = "INSERT INTO {plugin_Defcon_issue} (issue_id,consultant_id, estimate) values ( $t_bug_id, $t_consultant_id, $t_estimate )";
 			$result = db_query($query);
 		}
 		// next update the mantis_project_user_list_table in case role is set to be Manager
@@ -366,14 +397,16 @@ function defcon_update_project2( $p_event, $t_project_id ) {
 	}
 
 	function defcon_view_issue ( $thisissue, $t_issue_id){	
-		$query1 = "Select username from {plugin_Defcon_issue} as a, {user} as b where a.consultant_id=b.id and issue_id=$t_issue_id";
+		$query1 = "Select username, estimate from {plugin_Defcon_issue} as a, {user} as b where a.consultant_id=b.id and issue_id=$t_issue_id";
 		$result1 = db_query($query1);
 		if ($result1){
 			$row1 = db_fetch_array($result1);
 			if($row1){
 				$t_consultant = $row1['username'];
+				$t_estimate = $row1['estimate'];
 			} else {
 				$t_consultant = "UNKNOWN" ;
+				$t_estimate = 0;
 			}
 		}
 		echo '<tr class="spacer"><td colspan="6"></td></tr>';
@@ -382,6 +415,15 @@ function defcon_update_project2( $p_event, $t_project_id ) {
 		echo '<th class="bug-summary category">', plugin_lang_get( 'consultant', 'Defcon' ), '</th>';
 		echo '<td class="bug-summary" >', $t_consultant, '</td>';
 		echo '</tr>';
+		// do wwe need to show the projected amount?
+		$t_user_id = auth_get_current_user_id();
+		$t_access_level = user_get_access_level( $t_user_id,  helper_get_current_project() );
+		if ( $t_access_level >= plugin_config_get( 'update_threshold' ) ) {
+			echo '<tr>';
+			echo '<th class="bug-summary category">', plugin_lang_get( 'estimate', 'Defcon' ), '</th>';
+			echo '<td class="bug-summary" >', $t_estimate, '</td>';
+			echo '</tr>';
+		}
 	}
 
 	function defcon_myview() {
@@ -408,14 +450,16 @@ function defcon_update_project2( $p_event, $t_project_id ) {
 
 		if ( $t_access_level >= plugin_config_get( 'update_threshold' ) ) {
 
-			$query1 = "Select consultant_id from {plugin_Defcon_issue} where issue_id=$t_issue_id";
+			$query1 = "Select consultant_id, rate from {plugin_Defcon_issue} where issue_id=$t_issue_id";
 			$result1 = db_query($query1);
 			if ($result1){
 				$row1 = db_fetch_array($result1);
 				if ($row1){
-					$t_consultant_id = $row1['consultant_id'];
+					$t_consultant_id	= $row1['consultant_id'];
+					$t_new_rate		= $row1['rate'];
 				} else {
-					$t_consultant_id = 0 ;
+					$t_consultant_id	= 0 ;
+					$t_new_rate		= 0;
 				}
 			}
 		
@@ -437,9 +481,27 @@ function defcon_update_project2( $p_event, $t_project_id ) {
 						?>
 					</select>
 				</td>
+
+				<?php
+				if ( plugin_config_get( 'historic' ) == 1 ) {
+				?>
+					<td>
+					<?php echo plugin_lang_get( 'adjusted' ) ?>
+					</td>
+					<td>
+					<input type="number" name='adjusted_rate'  value ="<?PHP echo $t_new_rate ?>">
+					</td>
+					<td>
+					<?php echo plugin_lang_get( 'historic2' ) ?>
+					</td>
+					<td>
+					<input type="checkbox" name='update_historic_rate'  >
+					</td>
+				<?php
+				} 
+				?>
 			</tr>
 <?php
-
 		} else {
 				echo '<tr>';
 			echo '<th class="bug-summary category">', plugin_lang_get( 'consultant', 'Defcon' ), '</th>';
@@ -456,16 +518,83 @@ function defcon_update_project2( $p_event, $t_project_id ) {
 		$t_bug_id = $p_bug_data-> id;
 		$t_project_id = $p_bug_data-> project_id;
 		$t_consultant_id = intval(gpc_get_string( 'con_id'));
-	
+		$t_new_rate = intval(gpc_get_string( 'adjusted_rate'));
+		
+		// did we enter a manual rate (this has preference
+		$query1 = "Select rate from {plugin_Defcon_issue} where issue_id=$t_bug_id";
+		$result1 = db_query($query1);
+		if ($result1){
+			$row1 = db_fetch_array($result1);
+			if ($row1){
+				$t_old_rate		= $row1['rate'];
+			} else {
+				$t_old_rate		= 0;
+			}
+		}
+		// check if change was made
+		if ( $t_old_rate <> $t_new_rate ) {
+			$t_rate = $t_new_rate;
+			$query = "update {plugin_Defcon_issue} SET rate = $t_rate WHERE issue_id= $t_bug_id";
+			$result = db_query($query);
+		}
+
+		// do we want to to update the historical rates as stored in issue)
+		$t_historic = plugin_config_get( 'historic' );
+		if ( $t_historic == 1 ) {
+			if ( isset( $_POST['update_historic_rate'] ) ) {
+				$query = "select rate from {plugin_Defcon_project} WHERE project_id= $t_project_id";
+				$result = db_query($query);
+				if ($result){
+					$row = db_fetch_array($result);
+					if($row){
+						$t_rate			 = $row['rate'];
+					} else {
+						$t_rate			 = 0;
+					}
+				}		
+			$query = "update {plugin_Defcon_issue} SET rate = $t_rate WHERE issue_id= $t_bug_id";
+			$result = db_query($query);
+			}
+		}
+		// do we use the project rate or the rate stored in the issue ?
+		if ( $t_historic == 1 ) {
+			// fetch historical project rate from issue
+			$query = "select rate from {plugin_Defcon_issue} WHERE issue_id= $t_bug_id";
+			$result = db_query($query);
+			if (!$result){
+				$query = "select rate from {plugin_Defcon_project} WHERE project_id= $t_project_id";
+				$result = db_query($query);	
+			}
+		} else {
+			// fetch project rate
+			$query = "select rate from {plugin_Defcon_project} WHERE project_id= $t_project_id";
+			$result = db_query($query);
+		}
+
+		if ($result){
+			$row = db_fetch_array($result);
+			if($row){
+				$t_rate			 = $row['rate'];
+			} else {
+				$t_rate			 = 0;
+			}
+		}
+
+		// recalculate the expected cost
+		if ( custom_field_is_linked( custom_field_get_id_from_name('Estimate'), $t_project_id ) ) {
+			$t_estimate= custom_field_get_value( custom_field_get_id_from_name('Estimate'), $t_bug_id ) * $t_rate;
+		} else {
+			$t_estimate = 0;
+		}
 		// first update the plugin table
 		$query = "select * from {plugin_Defcon_issue} WHERE issue_id= $t_bug_id";
 		$result = db_query($query);
 		$count= db_num_rows($result);
 		if ($count>0){
-			$query = "update {plugin_Defcon_issue} SET consultant_id=$t_consultant_id WHERE issue_id= $t_bug_id";
+			$query = "update {plugin_Defcon_issue} SET consultant_id=$t_consultant_id, estimate=$t_estimate WHERE issue_id= $t_bug_id";
 			$result = db_query($query);
 		} else{
-            $query = "INSERT INTO {plugin_Defcon_issue} (issue_id,consultant_id) values ($t_bug_id, $t_consultant_id)";
+            $query = "INSERT INTO {plugin_Defcon_issue} (issue_id,consultant_id, estimate) values ($t_bug_id, $t_consultant_id, $t_estimate)";
 			$result = db_query($query);
 		}
 		// next update the mantis_project_user_list_table in case role is set to be Manager
@@ -502,19 +631,44 @@ function defcon_update_project2( $p_event, $t_project_id ) {
 		$result = db_query($query);
 		return;
 	}
-		function schema() {
-		return array(
-			array( 'CreateTableSQL', array( plugin_table( 'project' ), "
-						id 			I       NOTNULL AUTOINCREMENT UNSIGNED PRIMARY,
-						project_id			I	NOT NULL ,
-						consultant_id		I	NOT NULL ,
-						generalmail			C(100)
-						" ) ),
-			array( 'CreateTableSQL', array( plugin_table( 'issue' ), "
-						id		 			I   NOTNULL AUTOINCREMENT UNSIGNED PRIMARY,
-						issue_id			I	NOT NULL ,
-						consultant_id		I	NOT NULL 
-						" ) ),
-		);
-	} 
+	
+   /** uninstall and install functions * */
+    function uninstall() {
+        global $g_db;
+        # remove the tables created at installation
+        $request = 'DROP TABLE ' . plugin_table('project');
+        $g_db->Execute($request);
+		$request = 'DROP TABLE ' . plugin_table('issue');
+        $g_db->Execute($request);
+
+        # IMPORTANT : erase information about the plugin stored in Mantis
+        # Without this request, you cannot create the table again (if you re-install)
+        $request = "DELETE FROM " . db_get_table('config') . " WHERE config_id = 'plugin_Defcon_schema'";
+        $g_db->Execute($request);
+    }
+
+	function schema() {
+		# version 1.0.0
+		$schema[] = array( 'CreateTableSQL', array( plugin_table( 'project' ), "
+						id					I       NOTNULL UNSIGNED AUTOINCREMENT PRIMARY,
+						project_id			I       DEFAULT NULL,
+						consultant_id		I       DEFAULT NULL,
+						generalmail			C (100)  DEFAULT NULL
+						" ) );
+
+		$schema[] =	array( 'CreateTableSQL', array( plugin_table( 'issue' ), "
+						id					I       NOTNULL UNSIGNED AUTOINCREMENT PRIMARY,
+						issue_id			I       DEFAULT NULL,
+						consultant_id		I       DEFAULT NULL
+						" ) );
+
+		# version 3.0.0
+        $schema[] = array('AddColumnSQL', array(plugin_table('project'), "rate I  default NULL AFTER generalmail \" '' \""));
+        $schema[] = array('AddColumnSQL', array(plugin_table('issue'), "estimate I  default NULL AFTER consultant_id \" '' \""));
+		
+		# version 3.1.0
+        $schema[] = array('AddColumnSQL', array(plugin_table('issue'), "rate I  default NULL AFTER consultant_id \" '' \""));
+
+		return $schema;
+	}
 }

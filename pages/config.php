@@ -129,6 +129,24 @@ print_manage_menu();
 							</table>
 						</div>
 					</div>	
+					<div class="widget-main no-padding">
+						<div class="table-responsive">
+							<table class="table table-bordered table-condensed table-striped">
+								<tr>
+									<td class="category"  width="40%">
+									<?php echo plugin_lang_get( 'historic' ) ?>
+									</td>
+									<td class="category">
+									<label><input type="radio" name='plugin_defcon_historic' value="1" <?php echo( ON == plugin_config_get( 'historic' ) ) ? 'checked="checked" ' : ''?>/>
+									<?php echo plugin_lang_get( 'yes' )?></label>
+
+									<label><input type="radio" name='plugin_defcon_historic' value="0" <?php echo( OFF == plugin_config_get( 'historic' ) )? 'checked="checked" ' : ''?>/>
+									<?php echo plugin_lang_get( 'no' )?></label>
+									</td>
+								</tr>
+							</table>
+						</div>
+					</div>	
 
 					
 					<div class="widget-toolbox padding-8 clearfix">
