@@ -27,7 +27,7 @@ class Defconplugin extends MantisPlugin {
 		$this->name = plugin_lang_get( 'title' );
 		$this->description = plugin_lang_get( 'description' );
 		$this->page = 'config';
-		$this->version = '3.1.0';
+		$this->version = '3.1.1';
 		$this->requires = array( 'MantisCore' => '2.0.0', );
 		$this->author = 'Cas Nuy';
 		$this->contact = 'cas@nuy.info';
@@ -334,6 +334,7 @@ function defcon_update_project2( $p_event, $t_project_id ) {
 	function defcon_create_issue2 ($p_event, $thisissue){
 		$t_project_id= $thisissue->project_id;
 		$t_bug_id= $thisissue->id;
+		$t_rate = 0;
 		if (substr($_SERVER['HTTP_REFERER'],-19) <> 'bug_report_page.php'){
 			$query = "select consultant_id,rate from {plugin_Defcon_project} WHERE project_id= $t_project_id";
 			$result = db_query($query);
@@ -519,6 +520,7 @@ function defcon_update_project2( $p_event, $t_project_id ) {
 		$t_project_id = $p_bug_data-> project_id;
 		$t_consultant_id = intval(gpc_get_string( 'con_id'));
 		$t_new_rate = intval(gpc_get_string( 'adjusted_rate'));
+		$t_rate = 0;
 		
 		// did we enter a manual rate (this has preference
 		$query1 = "Select rate from {plugin_Defcon_issue} where issue_id=$t_bug_id";
