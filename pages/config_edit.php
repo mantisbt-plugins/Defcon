@@ -42,4 +42,4 @@ plugin_config_set( 'historic', $f_historic );
 form_security_purge( 'plugin_defcon_config_update' );
 
 # redirect
-print_successful_redirect( plugin_page( 'config', true ) );
+print_header_redirect( plugin_page( 'config', true ) );
