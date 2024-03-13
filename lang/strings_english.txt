@@ -40,3 +40,4 @@ $s_plugin_Defcon_yes		 = 'Yes';
 $s_plugin_Defcon_no			 = 'No';
 $s_plugin_Defcon_historic2	 = 'Update Historical rate from project definition';
 $s_plugin_Defcon_adjusted	 = 'Manual Adjusted rate';
+

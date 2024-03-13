@@ -23,11 +23,21 @@
 
 class Defconplugin extends MantisPlugin {
 
+	/**
+	 * Chart JS settings
+	 * 
+	 */
+	const CHARTJS_VERSION = '2.9.4';
+	const CHARTJS_HASH = 'sha256-t9UJPrESBeG2ojKTIcFLPGF7nHi2vEc7f5A2KpH/UBU=';
+	const CHARTJS_COLORSCHEMES_VERSION = '0.4.0';
+	const CHARTJS_COLORSCHEMES_HASH = 'sha256-Ctym065YsaugUvysT5nHayKynbiDGVpgNBqUePRAL+0=';
+	const CHARTJS_CDN = 'https://cdn.jsdelivr.net';
+	
 	function register() {
 		$this->name = plugin_lang_get( 'title' );
 		$this->description = plugin_lang_get( 'description' );
 		$this->page = 'config';
-		$this->version = '3.1.2';
+		$this->version = '3.2.0';
 		$this->requires = array( 'MantisCore' => '2.0.0', );
 		$this->author = 'Cas Nuy';
 		$this->contact = 'cas@nuy.info';
@@ -80,6 +90,12 @@ class Defconplugin extends MantisPlugin {
 		
 		//Show where the user is defined as primary consultant in the my_view page
 		plugin_event_hook( 'EVENT_MYVIEW', 'defcon_myview' );
+		
+		// add page to summary/graphisc
+		plugin_event_hook( 'EVENT_SUBMENU_SUMMARY', 'defcon_summary' );
+		event_declare('EVENT_MANTISGRAPH_SUBMENU');
+		plugin_event_hook( 'EVENT_MANTISGRAPH_SUBMENU', 'defcon_graphics' );
+		plugin_event_hook( 'EVENT_LAYOUT_RESOURCES', 'resources' );
 	}
 
 	function defcon_field_filter($p_event){
@@ -634,21 +650,6 @@ function defcon_update_project2( $p_event, $t_project_id ) {
 		return;
 	}
 	
-   /** uninstall and install functions * */
-    function uninstall() {
-        global $g_db;
-        # remove the tables created at installation
-        $request = 'DROP TABLE ' . plugin_table('project');
-        $g_db->Execute($request);
-		$request = 'DROP TABLE ' . plugin_table('issue');
-        $g_db->Execute($request);
-
-        # IMPORTANT : erase information about the plugin stored in Mantis
-        # Without this request, you cannot create the table again (if you re-install)
-        $request = "DELETE FROM " . db_get_table('config') . " WHERE config_id = 'plugin_Defcon_schema'";
-        $g_db->Execute($request);
-    }
-
 	function schema() {
 		# version 1.0.0
 		$schema[] = array( 'CreateTableSQL', array( plugin_table( 'project' ), "
@@ -673,4 +674,75 @@ function defcon_update_project2( $p_event, $t_project_id ) {
 
 		return $schema;
 	}
+
+
+	function defcon_summary() {
+		return $this->menu_item( 'summary' );
+	}
+
+	function defcon_graphics() {
+		return $this->menu_item( 'graphics' );
+	}
+
+	private function menu_item( $p_page ) {
+		$t_param_page = explode( '/', gpc_get_string( 'page', '' ) );
+		$t_plugin_page_current = end( $t_param_page );
+		$t_active = $t_plugin_page_current == $p_page ? ' active' : '';
+
+		$t_link = plugin_page( $p_page );
+
+		$t_items[] = '<a class="btn btn-sm btn-primary btn-white ' . $t_active . '" href="' . $t_link . '">'
+			. '<i class="ace-icon fa fa-pencil"></i> '
+			. 'By Consultant'
+			. '</a>';
+
+		return $t_items;
+	}
+
+	/**
+	 * Include javascript files for chart.js
+	 * @return void
+	 */
+	function resources() {
+		if( current( explode( '/', gpc_get_string( 'page', '' ) ) ) === $this->basename ) {
+			$this->include_chartjs();
+			printf( "\t<script src=\"%s\"></script>\n",
+				plugin_file( 'MantisGraph.js', false, 'MantisGraph' )
+			);
+		}
+	}
+
+	/**
+	 * Include Chart.js and plugins.
+	 *
+	 * This function can be called by other plugins that may need to use
+	 * Chart.js.
+	 *
+	 * @return void
+	 */
+	function include_chartjs() {
+		if( config_get_global( 'cdn_enabled' ) == ON ) {
+			$t_cdn_url = self::CHARTJS_CDN . '/npm/%s@%s/dist/';
+
+			# Chart.js library
+			$t_link = sprintf( $t_cdn_url, 'chart.js', self::CHARTJS_VERSION );
+			html_javascript_cdn_link( $t_link . 'Chart.min.js', self::CHARTJS_HASH );
+
+			# Chart.js color schemes plugin
+			$t_link = sprintf( $t_cdn_url, 'chartjs-plugin-colorschemes', self::CHARTJS_COLORSCHEMES_VERSION );
+			html_javascript_cdn_link( $t_link . 'chartjs-plugin-colorschemes.min.js', self::CHARTJS_COLORSCHEMES_HASH );
+		} else {
+			$t_scripts = array(
+				'Chart-' . self::CHARTJS_VERSION . '.min.js',
+				'chartjs-plugin-colorschemes-' . self::CHARTJS_COLORSCHEMES_VERSION . '.min.js',
+			);
+			foreach( $t_scripts as $t_script ) {
+				printf( "\t<script src=\"%s\"></script>\n",
+					plugin_file( $t_script, false, $this->basename )
+				);
+			}
+		}
+	}
+
 }
+
