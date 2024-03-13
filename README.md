@@ -1,7 +1,7 @@
 
-# 	Defcon plugin
+# 	Defcon plugin for Mantisbt
 	
-	- Version 3.2.0
+	Version 3.2.0
 
 ## Description
 
@@ -36,7 +36,7 @@ File bug reports and submit questions on the
 
 ## Installation
 
-1. [Download] the plugin here: https://github.com/mantisbt-plugins/Defcon/archive/refs/heads/main.zip
+1. Download the plugin here
 2. Copy the plugin's code into a `Defcon` directory in your Mantis 
    installation's `plugins/` directory. Note that the name is case sensitive.
 3. Log into Mantis as an administrator, and go to _Manage -> Manage Plugins_.
